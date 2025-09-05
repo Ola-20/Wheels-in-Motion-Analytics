@@ -1,0 +1,30 @@
+run on your GCP VM
+
+On the VM, authenticate and set the quota project (so tasks bill to the right project):
+
+gcloud auth application-default login
+gcloud auth application-default set-quota-project <YOUR_PROJECT_ID>
+
+
+In your project folder (with Dockerfile, docker-compose.yml, .env, dags/…):
+
+docker build -t airflow-img:latest .
+docker compose up airflow-init
+docker compose up -d
+
+
+Open the Airflow UI
+
+Make sure the VM’s firewall allows TCP 8080 (either by network tag + firewall rule, or allow in VPC).
+
+Visit: http://<VM_EXTERNAL_IP>:8080
+
+Login with the creds in .env (default airflow/airflow).
+
+quick tips
+
+You don’t need Redis/Celery when using LocalExecutor.
+
+Keep your custom image up to date with Selenium/Firefox as you already built it.
+
+Your DAGs that use Google services will pick up ADC via GOOGLE_APPLICATION_CREDENTIALS mount.

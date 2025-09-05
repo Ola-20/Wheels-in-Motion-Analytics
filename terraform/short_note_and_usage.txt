@@ -1,0 +1,34 @@
+How this maps to your AWS code
+
+EC2 → Compute Engine
+instance_type → machine_type;
+ami → image (image family string like debian-cloud/debian-12);
+ebs_block_device.volume_size → boot_disk.initialize_params.size.
+
+S3 → GCS
+aws_s3_bucket → google_storage_bucket.
+GCS favors uniform bucket-level access (IAM) instead of ACLs.
+
+Redshift → BigQuery
+Redshift = provisioned cluster; BigQuery is serverless.
+The closest IaC equivalent is creating a dataset (google_bigquery_dataset).
+No node types, passwords, or “publicly accessible” flag needed.
+
+If you also want a managed Spark cluster (AWS EMR analogue), add a google_dataproc_cluster later and point your jobs at it.
+
+Usage
+terraform init
+terraform plan -var="project_id=YOUR_PROJECT" \
+               -var="region=australia-southeast1" \
+               -var="zone=australia-southeast1-a" \
+               -var="gcs_bucket_name=your-unique-bucket-name"
+terraform apply
+
+
+Notes
+
+Bucket names must be globally unique.
+
+BigQuery location must match your analytics/BI region.
+
+Auth: either run gcloud auth application-default login (ADC) or pass a service-account JSON via credentials_file.

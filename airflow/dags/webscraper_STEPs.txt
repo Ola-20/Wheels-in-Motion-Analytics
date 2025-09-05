@@ -1,0 +1,11 @@
+How it runs (quick mental model)
+
+download_contents_task → requests.get() pulls the TfL directory page.
+
+extract_links_task → BeautifulSoup parses the table, enters usage-stats/, keeps only 2021–2022, builds {lastDate: relativeHref}.
+
+export_links_task → writes /tmp/links_dictionary.json.
+
+upload_dict_to_gcs → uploads to gs://$GCS_BUCKET/$GCS_DEST_PREFIX/links_dictionary.json using ADC from your containers.
+
+If you want ingestion to wait for this scraper, add an ExternalTaskSensor in the ingestion DAG to wait on upload_dict_to_gcs (we can paste that snippet when you’re ready).

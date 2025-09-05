@@ -1,0 +1,24 @@
+
+# Python
+__pycache__/
+*.pyc
+
+# Airflow
+airflow/logs/
+airflow/*.db
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Environment / Secrets
+.env
+*.json
+
+.env.*
+airflow/.env
+airflow/.env.txt
+*.key.json
+*credentials*.json
+service-account*.json
