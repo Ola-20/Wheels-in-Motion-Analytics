@@ -57,3 +57,9 @@ variable "bq_location" {
   type        = string
   default     = "australia-southeast1"
 }
+
+variable "dataproc_staging_bucket_name" {
+  description = "The name of the Dataproc staging bucket"
+  type        = string
+  default     = "my-dataproc-staging"
+}

@@ -1,18 +1,17 @@
-# Use an Airflow version compatible with google provider >=10.x
 FROM apache/airflow:2.10.2
 
-ENV AIRFLOW_HOME=/opt/airflow
+# Use the non-root 'airflow' user (inside Airflow's venv)
+USER airflow
 
-USER root
+# Requirements
+COPY --chown=airflow:root requirements.txt /requirements.txt
 
-# (No browser needed; keep image lean)
-# If you later add OS deps (e.g., for other DAGs), do it here.
+# Airflow version to match constraints
+ARG AIRFLOW_VERSION=2.10.2
 
-# Install Python deps
-COPY requirements.txt /requirements.txt
-RUN pip install --no-cache-dir -r /requirements.txt
+# Compute Python MAJOR.MINOR inside the image, then use it for constraints
+RUN PYVER=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")') \
+ && pip install --no-cache-dir -r /requirements.txt \
+    -c "https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYVER}.txt"
 
-WORKDIR ${AIRFLOW_HOME}
-
-# Back to airflow user (Airflow images define this)
-USER ${AIRFLOW_UID}
+WORKDIR /opt/airflow
