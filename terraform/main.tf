@@ -27,7 +27,7 @@ provider "google" {
 }
 
 # Who is the current logged-in user? (avoid hardcoding your email), this will be grabbed from your gcloud auth application-default login
-data "google_client_openid_userinfo" "me" {}
+#data "google_client_openid_userinfo" "me" {}
 
 # ---- Enable Required APIs ----
 resource "google_project_service" "compute" {
@@ -64,13 +64,6 @@ resource "google_service_account" "bicycle_rent_sa" {
     google_project_service.storage,
     google_project_service.bigquery
   ]
-}
-
-# ---- Allow YOUR USER to impersonate the SA (no key files needed) ----
-resource "google_service_account_iam_member" "allow_impersonation" {
-  service_account_id = google_service_account.bicycle_rent_sa.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "user:${data.google_client_openid_userinfo.me.email}"
 }
 
 # ---- IAM Roles for SA (explicit, no loop) ----
@@ -167,4 +160,26 @@ output "service_account_email" {
 
 output "vm_name" {
   value = google_compute_instance.bicycle_rent_vm.name
+}
+
+
+#------Dataproc staging bucket--------
+# Enable Dataproc API (needed if you’ll use Dataproc clusters)
+resource "google_project_service" "dataproc" {
+  project            = var.project_id
+  service            = "dataproc.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Dataproc staging bucket
+resource "google_storage_bucket" "dataproc_staging" {
+  name          = var.dataproc_staging_bucket_name
+  project       = var.project_id
+  location      = var.region
+  storage_class = "STANDARD"
+}
+
+# Output for Airflow .env
+output "dataproc_staging_bucket" {
+  value = "gs://${google_storage_bucket.dataproc_staging.name}"
 }

@@ -1,9 +1,13 @@
-# Airflow Google provider (needs Airflow >= 2.10)
-apache-airflow-providers-google==10.16.0
+# Airflow providers
+# Matches Airflow >= 2.10.x
+
+
+apache-airflow-providers-google
+
 
 # Parsing & HTTP
 beautifulsoup4==4.12.3
-requests==2.31.0
+requests
 
-# (Optional) If you truly need it elsewhere in your project, keep pandas; otherwise you can drop it
-pandas==2.2.2
+# Data handling (optional but useful in DAGs)
+pandas

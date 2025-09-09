@@ -1,4 +1,4 @@
-version: "3.8"
+#version: "3.8"
 
 x-airflow-common: &airflow-common
   image: airflow-img:latest              # your custom image built from Dockerfile
@@ -12,13 +12,13 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     # let google libs inside containers find ADC:
-    GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/google/adc.json
+   # GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/google/adc.json
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
     # mount your ADC file from the VM into the containers (read-only)
-    - ${HOST_ADC_PATH}:/var/secrets/google/adc.json:ro
+    #- ${HOST_ADC_PATH}:/var/secrets/google/adc.json:ro
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     postgres:
@@ -42,6 +42,7 @@ services:
 
   airflow-init:
     <<: *airflow-common
+    restart: "no"
     entrypoint: /bin/bash
     command:
       - -c
