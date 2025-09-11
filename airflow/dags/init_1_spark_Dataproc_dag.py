@@ -24,7 +24,6 @@ STAGING_BUCKET = os.environ.get("DATAPROC_STAGING_BUCKET", "my-dataproc-staging"
 # ---- Dataproc cluster config (single-node, staging bucket only)
 CLUSTER_CONFIG = {
     "project_id": PROJECT_ID,
-    "cluster_name": CLUSTER_NAME,
     "config": {
         "config_bucket": STAGING_BUCKET,   # staging bucket for temp + logs
         "gce_cluster_config": {
