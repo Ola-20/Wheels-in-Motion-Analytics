@@ -12,14 +12,14 @@ from airflow.providers.google.cloud.operators.dataproc import (
 )
 
 # ---- Config via env
-PROJECT_ID     = os.environ.get("GCP_PROJECT_ID", "REPLACE_ME")
+PROJECT_ID     = os.environ.get("GCP_PROJECT_ID", "bicycle-renting-proc-analytics")
 REGION         = os.environ.get("GCP_REGION", "australia-southeast1")
 CLUSTER_NAME   = os.environ.get("DATAPROC_CLUSTER_NAME", "extras-data-transformer")
 GCS_SCRIPT_URI = os.environ.get(
     "GCS_PYSPARK_URI",
     "gs://your-bucket/utils/scripts/init-data-transformation.py",
 )
-STAGING_BUCKET = os.environ.get("DATAPROC_STAGING_BUCKET", "gs://my-dataproc-staging")
+STAGING_BUCKET = os.environ.get("DATAPROC_STAGING_BUCKET", "my-dataproc-staging")
 
 # ---- Dataproc cluster config (single-node, staging bucket only)
 CLUSTER_CONFIG = {
@@ -29,6 +29,8 @@ CLUSTER_CONFIG = {
         "config_bucket": STAGING_BUCKET,   # staging bucket for temp + logs
         "gce_cluster_config": {
             "internal_ip_only": False,     # default public egress, fine for small project
+            "service_account": "de-service-account@bicycle-renting-proc-analytics.iam.gserviceaccount.com",
+            "service_account_scopes": ["https://www.googleapis.com/auth/cloud-platform"]
         },
         "master_config": {
             "num_instances": 1,
