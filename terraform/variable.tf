@@ -49,7 +49,7 @@ variable "gcs_bucket_name" {
 variable "bq_dataset_id" {
   description = "BigQuery dataset ID"
   type        = string
-  default     = "bicycle_rent_warehouse"
+  default     = "cycling_analytics"
 }
 
 variable "bq_location" {
