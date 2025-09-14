@@ -11,6 +11,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+    #GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
     # let google libs inside containers find ADC:
    # GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/google/adc.json
   volumes:
@@ -18,7 +19,7 @@ x-airflow-common: &airflow-common
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
     # mount your ADC file from the VM into the containers (read-only)
-    #- ${HOST_ADC_PATH}:/var/secrets/google/adc.json:ro
+    #- ${HOST_ADC_PATH}:/opt/airflow/gcloud/adc.json:ro
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     postgres:

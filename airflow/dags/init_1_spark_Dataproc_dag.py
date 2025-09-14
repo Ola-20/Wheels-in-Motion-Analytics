@@ -23,26 +23,23 @@ STAGING_BUCKET = os.environ.get("DATAPROC_STAGING_BUCKET", "my-dataproc-staging"
 
 # ---- Dataproc cluster config (single-node, staging bucket only)
 CLUSTER_CONFIG = {
-    "project_id": PROJECT_ID,
-    "config": {
-        "config_bucket": STAGING_BUCKET,   # staging bucket for temp + logs
-        "gce_cluster_config": {
-            "internal_ip_only": False,     # default public egress, fine for small project
-            "service_account": "de-service-account@bicycle-renting-proc-analytics.iam.gserviceaccount.com",
-            "service_account_scopes": ["https://www.googleapis.com/auth/cloud-platform"]
-        },
-        "master_config": {
-            "num_instances": 1,
-            "machine_type_uri": "e2-standard-4",
-            "disk_config": {"boot_disk_size_gb": 100},
-        },
-        "worker_config": {"num_instances": 0},  # single-node cluster
-        "software_config": {
-            "image_version": "2.2-debian12",
-        },
+    "config_bucket": STAGING_BUCKET,   # staging bucket for temp + logs
+    "gce_cluster_config": {
+        "internal_ip_only": False,
+        
     },
+    "master_config": {
+        "num_instances": 1,
+        "machine_type_uri": "e2-standard-4",
+        "disk_config": {"boot_disk_size_gb": 100},
+    },
+    "worker_config": {"num_instances": 0},              # single-node
+    "secondary_worker_config": {"num_instances": 0},    # ensure no preemptibles
+    "software_config": {"image_version": "2.2-debian12"},
 }
 
+#import logging
+#logging.info("Effective CLUSTER_CONFIG: %r", CLUSTER_CONFIG)
 # ---- Spark job spec
 PYSPARK_JOB = {
     "reference": {"project_id": PROJECT_ID},
@@ -64,7 +61,7 @@ default_args = {
 with DAG(
     dag_id="init_1_spark_dataproc_dag",
     description="One-off Spark job on Dataproc to process extra files in GCS.",
-    schedule="@once",
+    schedule_interval="@once",
     default_args=default_args,
     catchup=False,
     max_active_runs=1,
@@ -94,7 +91,7 @@ with DAG(
     submit_job = DataprocSubmitJobOperator(
         task_id="submit_pyspark_job",
         project_id=PROJECT_ID,
-        location=REGION,
+        region=REGION,
         job=PYSPARK_JOB,
     )
 

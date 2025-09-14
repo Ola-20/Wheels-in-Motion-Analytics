@@ -1,4 +1,11 @@
+
 FROM apache/airflow:2.10.2
+
+# Install wget at the OS level
+USER root
+RUN apt-get update -qq && \
+    apt-get install -y -qq --no-install-recommends wget ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 # Use the non-root 'airflow' user (inside Airflow's venv)
 USER airflow
