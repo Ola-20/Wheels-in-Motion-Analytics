@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.operators.bash import BashOperator
@@ -11,14 +12,11 @@ from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesyste
 # =========================
 # ENV / CONFIG
 # =========================
-# Set these in your .env or container env
 path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow")
 
 # GCS config
 GCS_BUCKET = os.environ.get("GCS_BUCKET", "gcs_no_bucket")
-# e.g. raw/cycling-extras
 GCS_DEST_PREFIX = os.environ.get("GCS_DEST_PREFIX", "raw/cycling-extras")
-# e.g. utils/scripts
 GCS_SCRIPT_DESTINATION = os.environ.get("GCS_SCRIPT_DESTINATION", "utils/scripts")
 GCP_CONN_ID = os.environ.get("GCP_CONN_ID", "google_cloud_default")
 
@@ -45,11 +43,16 @@ download_links = [
 local_scripts = ["init-data-transformation.py", "journey-data-transformation.py"]
 
 
-
+# =========================
+# Helpers
 # =========================
 def preprocess_data(filepath: str) -> None:
     """
-    For weather.json, extract only the 'days' array and overwrite the file.
+    For weather.json, normalize payload to a list of day dicts and overwrite the file.
+    Handles:
+      - dict roots like {"days": [...]} or {"data": [...]}
+      - list roots like [...]
+      - JSON strings (loads to Python first)
     No-op for other files.
     """
     filename = os.path.basename(filepath)
@@ -57,11 +60,37 @@ def preprocess_data(filepath: str) -> None:
         print(f"No preprocessing needed for {filename}")
         return
 
-    with open(filepath, "r") as f:
-        weather = json.load(f)
+    # Read raw file (robust to stray whitespace/BOM)
+    with open(filepath, "r", encoding="utf-8") as f:
+        raw = f.read().strip()
 
-    daily_weather = weather.get("days", [])
-    with open(filepath, "w") as f:
+    # Parse JSON safely
+    try:
+        payload = json.loads(raw)
+    except Exception as e:
+        logging.exception("Failed to parse %s as JSON; writing empty list", filename)
+        payload = None
+
+    # Normalize to list of days
+    if isinstance(payload, dict):
+        daily_weather = payload.get("days") or payload.get("data") or []
+    elif isinstance(payload, list):
+        daily_weather = payload
+    else:
+        daily_weather = []
+
+    if not isinstance(daily_weather, list):
+        logging.error("Unexpected weather format (%s); coercing to empty list", type(daily_weather))
+        daily_weather = []
+
+    if daily_weather:
+        try:
+            logging.info("weather.json sample keys: %s", list(daily_weather[0].keys()))
+        except Exception:
+            pass  # first element might not be a dict; ignore
+
+    # Overwrite file with normalized list
+    with open(filepath, "w", encoding="utf-8") as f:
         json.dump(daily_weather, f)
 
 
@@ -71,6 +100,9 @@ default_args = {
     "depends_on_past": False,
     "retries": 1,
 }
+
+# Ensure local dir exists (sometimes AIRFLOW_HOME is not created)
+os.makedirs(path_to_local_home, exist_ok=True)
 
 # =========================
 # DAG
@@ -118,9 +150,9 @@ with DAG(
         for item in download_links:
             LocalFilesystemToGCSOperator(
                 task_id=f"upload_{item['name']}_to_gcs_task",
-                filename=f"{path_to_local_home}/{item['output']}",
-                destination_bucket=GCS_BUCKET,
-                destination_object=f"{GCS_DEST_PREFIX}/{item['output']}",
+                src=f"{path_to_local_home}/{item['output']}",
+                bucket=GCS_BUCKET,
+                dst=f"{GCS_DEST_PREFIX}/{item['output']}",
                 gcp_conn_id=GCP_CONN_ID,
             )
 
@@ -139,10 +171,9 @@ with DAG(
         for idx, script_name in enumerate(local_scripts):
             LocalFilesystemToGCSOperator(
                 task_id=f"upload_script_{idx}_to_gcs_task",
-                # create string path using os.path.join to ensure cross-platform compatibility
-                filename=os.path.join("dags", "scripts", script_name),
-                destination_bucket=GCS_BUCKET,
-                destination_object=f"{GCS_SCRIPT_DESTINATION}/{script_name}",
+                src=os.path.join("dags", "scripts", script_name),
+                bucket=GCS_BUCKET,
+                dst=f"{GCS_SCRIPT_DESTINATION}/{script_name}",
                 gcp_conn_id=GCP_CONN_ID,
             )
 
