@@ -1,76 +1,33 @@
-# dags/init_1_spark_dataproc_dag.py
 import os
 from airflow import DAG
 from airflow.utils.dates import days_ago
 from airflow.operators.empty import EmptyOperator
 from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.providers.google.cloud.operators.dataproc import DataprocCreateBatchOperator
 
-from airflow.providers.google.cloud.operators.dataproc import (
-    DataprocCreateClusterOperator,
-    DataprocSubmitJobOperator,
-    DataprocDeleteClusterOperator,
-)
+PROJECT_ID        = os.environ.get("GCP_PROJECT_ID", "bicycle-renting-proc-analytics")
+REGION            = os.environ.get("GCP_REGION", "australia-southeast1")
+GCS_BUCKET        = os.environ.get("GCS_BUCKET", "bicycle-renting-proc-analytics-bucket-12345")
+RAW_PREFIX        = os.environ.get("GCS_DEST_PREFIX", "raw/tfl/usage-stats")
+PROCESSED_PREFIX  = os.environ.get("PROCESSED_PREFIX", "processed/cycling-dimension")
+GCS_PYSPARK_URI   = os.environ.get("GCS_PYSPARK_URI")
+DATAPROC_TMP_BUCKET = os.environ.get("DATAPROC_TMP_BUCKET", "my-dataproc-staging")
+RUNTIME_VERSION   = os.environ.get("DATAPROC_RUNTIME", "2.2")
 
-# ---- Config via env
-PROJECT_ID     = os.environ.get("GCP_PROJECT_ID", "bicycle-renting-proc-analytics")
-REGION         = os.environ.get("GCP_REGION", "australia-southeast1")
-CLUSTER_NAME   = os.environ.get("DATAPROC_CLUSTER_NAME", "extras-data-transformer")
-GCS_SCRIPT_URI = os.environ.get(
-    "GCS_PYSPARK_URI",
-    "gs://your-bucket/utils/scripts/init-data-transformation.py",
-)
-STAGING_BUCKET = os.environ.get("DATAPROC_STAGING_BUCKET", "my-dataproc-staging")
-
-# ---- Dataproc cluster config (single-node, staging bucket only)
-CLUSTER_CONFIG = {
-    "config_bucket": STAGING_BUCKET,   # staging bucket for temp + logs
-    "gce_cluster_config": {
-        "internal_ip_only": False,
-        
-    },
-    "master_config": {
-        "num_instances": 1,
-        "machine_type_uri": "e2-standard-4",
-        "disk_config": {"boot_disk_size_gb": 100},
-    },
-    "worker_config": {"num_instances": 0},              # single-node
-    "secondary_worker_config": {"num_instances": 0},    # ensure no preemptibles
-    "software_config": {"image_version": "2.2-debian12"},
-}
-
-#import logging
-#logging.info("Effective CLUSTER_CONFIG: %r", CLUSTER_CONFIG)
-# ---- Spark job spec
-PYSPARK_JOB = {
-    "reference": {"project_id": PROJECT_ID},
-    "placement": {
-        "cluster_name": "{{ ti.xcom_pull(task_ids='create_cluster') }}"
-    },
-    "pyspark_job": {
-        "main_python_file_uri": GCS_SCRIPT_URI,
-    },
-}
-
-default_args = {
-    "owner": "airflow",
-    "start_date": days_ago(1),
-    "depends_on_past": False,
-    "retries": 1,
-}
+default_args = {"owner": "airflow", "start_date": days_ago(1), "retries": 0}
 
 with DAG(
     dag_id="init_1_spark_dataproc_dag",
-    description="One-off Spark job on Dataproc to process extra files in GCS.",
     schedule_interval="@once",
     default_args=default_args,
     catchup=False,
     max_active_runs=1,
-    tags=["spark", "dataproc", "extras", "london", "2021", "journey"],
+    tags=["spark","dataproc","serverless"]
 ) as dag:
 
     wait_for_ingestion = ExternalTaskSensor(
         task_id="sensor_for_init_0_ingestion_dag",
-        external_dag_id="init_0_ingestion_to_gcs_dag",  # <-- update to match your ingestion DAG
+        external_dag_id="init_0_ingestion_to_gcs_dag",
         external_task_id="end",
         allowed_states=["success"],
         failed_states=["failed", "skipped"],
@@ -80,29 +37,29 @@ with DAG(
 
     start = EmptyOperator(task_id="start")
 
-    create_cluster = DataprocCreateClusterOperator(
-        task_id="create_cluster",
-        project_id=PROJECT_ID,
-        cluster_config=CLUSTER_CONFIG,
-        region=REGION,
-        cluster_name=CLUSTER_NAME,
-    )
+    batch_body = {
+        "pyspark_batch": {
+            "main_python_file_uri": GCS_PYSPARK_URI,
+            "args": [
+                "--gcs-bucket", GCS_BUCKET,
+                "--raw-prefix", RAW_PREFIX,
+                "--processed-prefix", PROCESSED_PREFIX,
+            ],
+        },
+        "runtime_config": {"version": RUNTIME_VERSION},
+        "environment_config": {"execution_config": {"staging_bucket": DATAPROC_TMP_BUCKET}},
+        "labels": {"airflow_dag": "init_1_spark_dataproc_dag", "component": "serverless-spark"},
+    }
 
-    submit_job = DataprocSubmitJobOperator(
-        task_id="submit_pyspark_job",
+    spark_serverless = DataprocCreateBatchOperator(
+        task_id="spark_serverless_batch",
         project_id=PROJECT_ID,
         region=REGION,
-        job=PYSPARK_JOB,
-    )
-
-    delete_cluster = DataprocDeleteClusterOperator(
-        task_id="delete_cluster",
-        project_id=PROJECT_ID,
-        region=REGION,
-        cluster_name=CLUSTER_NAME,
-        trigger_rule="all_done",  # always clean up
+        batch=batch_body,
+        # optional: stable id while testing
+        # batch_id="extras-transform-{{ ds_nodash }}",
     )
 
     end = EmptyOperator(task_id="end")
 
-    wait_for_ingestion >> start >> create_cluster >> submit_job >> delete_cluster >> end
+    wait_for_ingestion >> start >> spark_serverless >> end

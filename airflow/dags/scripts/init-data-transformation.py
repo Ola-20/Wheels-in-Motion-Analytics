@@ -5,12 +5,19 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F, types as T
 
-# ----------------------------
-# Config (set via env if you like)
-# ----------------------------
-GCS_BUCKET         = os.environ.get("GCS_BUCKET", "your-bucket-name")
-RAW_PREFIX         = os.environ.get("RAW_PREFIX", "raw/cycling-extras")
-PROCESSED_PREFIX   = os.environ.get("PROCESSED_PREFIX", "processed/cycling-dimension")
+import argparse
+
+env = os.environ
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--gcs-bucket", default=env.get("GCS_BUCKET", "your-bucket-name"))
+parser.add_argument("--raw-prefix", default=env.get("RAW_PREFIX", "raw/cycling-extras"))
+parser.add_argument("--processed-prefix", default=env.get("PROCESSED_PREFIX", "processed/cycling-dimension"))
+args = parser.parse_args()
+
+GCS_BUCKET       = args.gcs_bucket
+RAW_PREFIX       = args.raw_prefix
+PROCESSED_PREFIX = args.processed_prefix
 
 STATIONS_IN  = f"gs://{GCS_BUCKET}/{RAW_PREFIX}/stations.csv"
 WEATHER_IN   = f"gs://{GCS_BUCKET}/{RAW_PREFIX}/weather.json"
