@@ -18,11 +18,18 @@ dim_weather (daily weather)
 
 ### Datasets Used
 
-TfL weekly journey CSVs (from the usage-stats/ folder): ride-level data such as Rental Id, Bike Id, Start/End Date, Start/End Station Id/Name, etc.
+Weekly journey files (actual rides)
+I scraped the TfL cycling data page to collect links under usage-stats/, then downloaded each weekly CSV.
+Source: Transport for London (TfL) 
+ (the homepage I scraped to build links_dictionary.json), which points to files like usage-stats/17Mar2021-23Mar2021.csv.
 
-Docking stations CSV: station IDs, names (and placeholders for coordinates if missing).
+Docking stations (station lookup/dimension)
+CSV of docking stations (IDs, names; coordinates may be refined later).
+Source: https://www.whatdotheyknow.com/request/664717/response/1572474/attach/3/Cycle%20hire%20docking%20stations.csv.txt
 
-Daily weather JSON: normalized to a list of daily records and used to build dim_weather.
+Daily weather (weather dimension)
+JSON of daily weather, normalized in the pipeline to an array of day records.
+Source (direct download link): https://docs.google.com/uc?export=download&id=13LWAH93xxEvOukCnPhrfXH7rZZq_-mss
 
 ### Process (two big steps)
 #### 1) Bootstrap (setup + helpers)
