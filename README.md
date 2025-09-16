@@ -20,7 +20,7 @@ dim_weather (daily weather)
 
 Weekly journey files (actual rides)
 I scraped the TfL cycling data page to collect links under usage-stats/, then downloaded each weekly CSV.
-Source: Transport for London (TfL) 
+Source: [Transport for London (TfL)](https://cycling.data.tfl.gov.uk/) 
  (the homepage I scraped to build links_dictionary.json), which points to files like usage-stats/17Mar2021-23Mar2021.csv.
 
 Docking stations (station lookup/dimension)
