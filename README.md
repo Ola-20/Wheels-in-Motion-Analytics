@@ -76,16 +76,16 @@ The scripts are below:
 
 3) proc_2_gcs_to_bigquery_dag – Load Parquet from GCS to BigQuery tables: dim_station, dim_datetime, fact_journey (overwrite for a clean, idempotent load).
 
-Outputs
+### Expected Outputs
 
-BigQuery tables: dim_weather, dim_station, dim_datetime, fact_journey.
+   BigQuery tables: dim_weather, dim_station, dim_datetime, fact_journey.
 
-GCS layout:
+### GCS directory layout:
 
-raw/… (downloaded weekly CSVs)
-
-processed/cycling-dimension/{stations, datetime, weather}/
-
-processed/cycling-fact/journey/
-
-utils/scripts/*.py, links_dictionary.json (manifest)
+   raw/… (downloaded weekly CSVs)
+   
+   processed/cycling-dimension/{stations, datetime, weather}/
+   
+   processed/cycling-fact/journey/
+   
+   utils/scripts/*.py, links_dictionary.json (manifest)
