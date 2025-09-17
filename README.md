@@ -56,7 +56,7 @@ The scripts are below:
 
 *Note: only this first section has been completed as of 18/09/2025. See the Airlow WebObserver UI below*
 
-![Section One Completed](images/ingestion_initialisation_dag_works.png)
+![Section One Completed](images/ingestion_initialisation_dag_works.PNG)
 
 #### 2) Production (real data flow)
 
