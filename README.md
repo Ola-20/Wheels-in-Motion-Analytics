@@ -5,6 +5,7 @@
 
 This project turns Transport for London (TfL) bike-rental files into clean, analysis-ready tables in BigQuery. It uses Terraform to manage cloud resources provisioning, Airflow to schedule work, Dataproc Serverless (Spark) to transform data, Cloud Storage (GCS) to stage files, BigQuery for the final analytics layer, and Looker Studio for visualization.
 
+
 ## Objective
 
 To analyze and understand how weather conditions, station characteristics, and time factors influence bicycle rental demand in London. The goal is to identify key patterns and relationships that can help predict rental usage and optimize resource allocation.
@@ -36,9 +37,9 @@ dim_weather (daily weather)
    Source (direct download link): [here](https://docs.google.com/uc?export=download&id=13LWAH93xxEvOukCnPhrfXH7rZZq_-mss)
 
 ### Process (two significant steps)
-The project was segregated into two broad steps, containing two sets of scripts.
+The project was segregated into two broad sections, containing two sets of scripts.
 
-#### 1) Bootstrap (setup + helpers)
+#### 1) Bootstrap (setup and test, Upload helper scripts)
 
 It sets up the environment so your Airflow containers and connections can talk to GCP using the right credentials and settings.
 Then it downloads the TfL files, cleans the weather JSON, uploads data and scripts to GCS, and runs a Dataproc Serverless job to write processed Parquet files.
@@ -52,6 +53,8 @@ The scripts are below:
 3) init_2_gcs_to_bigquery_dag – Load processed weather into BigQuery as dim_weather.
       
 4) init_3_web_scraping_gcp_vm_dag – Crawl the TfL site and save a manifest (links_dictionary.json) of weekly journey CSV links to GCS.
+
+*Note: only this first section has been completed as of 18/09/2025*
 
 #### 2) Production (real data flow)
 
