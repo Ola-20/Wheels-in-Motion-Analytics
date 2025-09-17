@@ -1,10 +1,12 @@
-### Overview
+## Overview
 
 This project turns Transport for London (TfL) bike-rental files into clean, analysis-ready tables in BigQuery. It uses Airflow to schedule work, Dataproc Serverless (Spark) to transform data, Cloud Storage (GCS) to stage files, and BigQuery for the final analytics layer.
 
-### Goal
+## Objective
 
-Build a reliable, repeatable pipeline from web → raw files → cleaned datasets → BigQuery.
+To analyze and understand how weather conditions, station characteristics, and time factors influence bicycle rental demand in London. The goal is to identify key patterns and relationships that can help predict rental usage and optimize resource allocation.
+
+To achieve this: Build a reliable, repeatable pipeline from web → raw files → cleaned datasets → BigQuery.
 
 Produce a simple star-schema for analysis and dashboards:
 
@@ -16,20 +18,19 @@ dim_datetime (time attributes)
 
 dim_weather (daily weather)
 
-### Datasets Used
+## Datasets Used
+1) Weekly journey files (actual rides)
+   I scraped the TfL cycling data page to collect links under usage-stats/, then downloaded each weekly CSV.
+   Source: [Transport for London (TfL)](https://cycling.data.tfl.gov.uk/) 
+    (the homepage I scraped to build links_dictionary.json), which points to files like usage-stats/17Mar2021-23Mar2021.csv.
 
-Weekly journey files (actual rides)
-I scraped the TfL cycling data page to collect links under usage-stats/, then downloaded each weekly CSV.
-Source: [Transport for London (TfL)](https://cycling.data.tfl.gov.uk/) 
- (the homepage I scraped to build links_dictionary.json), which points to files like usage-stats/17Mar2021-23Mar2021.csv.
+2) Docking stations (station lookup/dimension)
+   CSV of docking stations (IDs, names; coordinates may be refined later).
+   Source (direct download link): [here](https://www.whatdotheyknow.com/request/664717/response/1572474/attach/3/Cycle%20hire%20docking%20stations.csv.txt)
 
-Docking stations (station lookup/dimension)
-CSV of docking stations (IDs, names; coordinates may be refined later).
-Source: https://www.whatdotheyknow.com/request/664717/response/1572474/attach/3/Cycle%20hire%20docking%20stations.csv.txt
-
-Daily weather (weather dimension)
-JSON of daily weather, normalized in the pipeline to an array of day records.
-Source (direct download link): https://docs.google.com/uc?export=download&id=13LWAH93xxEvOukCnPhrfXH7rZZq_-mss
+3) Daily weather (weather dimension)
+   JSON of daily weather, normalized in the pipeline to an array of day records.
+   Source (direct download link): [here](https://docs.google.com/uc?export=download&id=13LWAH93xxEvOukCnPhrfXH7rZZq_-mss)
 
 ### Process (two big steps)
 #### 1) Bootstrap (setup + helpers)
