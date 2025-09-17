@@ -64,17 +64,17 @@ It reads raw files from GCS, transforms them, and writes clean Parquet data to t
 
 The scripts are below:
 
-proc_0_ingestion_to_gcs_dag – Use the manifest to download the real weekly journey CSVs to GCS raw/.
+1) proc_0_ingestion_to_gcs_dag – Use the manifest to download the real weekly journey CSVs to GCS raw/.
+   
+2) proc_1_spark_dataproc_serverless_dag – Run the journey transform script to:
+   
+         create processed/cycling-fact/journey/ (fact),
+         
+         create processed/cycling-dimension/datetime/ (datetime dim),
+         
+         and augment processed/cycling-dimension/stations/ if new station IDs appear.
 
-proc_1_spark_dataproc_serverless_dag – Run the journey transform script to:
-
-create processed/cycling-fact/journey/ (fact),
-
-create processed/cycling-dimension/datetime/ (datetime dim),
-
-and augment processed/cycling-dimension/stations/ if new station IDs appear.
-
-proc_2_gcs_to_bigquery_dag – Load Parquet from GCS to BigQuery tables: dim_station, dim_datetime, fact_journey (overwrite for a clean, idempotent load).
+3) proc_2_gcs_to_bigquery_dag – Load Parquet from GCS to BigQuery tables: dim_station, dim_datetime, fact_journey (overwrite for a clean, idempotent load).
 
 Outputs
 
