@@ -54,7 +54,9 @@ The scripts are below:
       
 4) init_3_web_scraping_gcp_vm_dag – Crawl the TfL site and save a manifest (links_dictionary.json) of weekly journey CSV links to GCS.
 
-*Note: only this first section has been completed as of 18/09/2025*
+*Note: only this first section has been completed as of 18/09/2025. See the Airlow WebObserver UI below*
+
+![Section One Completed](images/ingestion_initialisation_dag_works.png)
 
 #### 2) Production (real data flow)
 
