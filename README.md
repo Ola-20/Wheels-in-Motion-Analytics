@@ -58,7 +58,9 @@ The scripts are below:
 
 ![Section One Completed](images/ingestion_initialisation_dag_works.PNG)
 
-#### 2) Production (real data flow)
+#### 2) Production (real data flow) 
+
+*Note: Scripts below are under development as of 18th of Sept. 2025*
 
 Section 2 (Transform)
 It waits until Step 1 finishes, then creates a Dataproc Serverless batch with PySpark script and settings.
