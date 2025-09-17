@@ -3,7 +3,7 @@
 
 ## Overview
 
-This project turns Transport for London (TfL) bike-rental files into clean, analysis-ready tables in BigQuery. It uses Airflow to schedule work, Dataproc Serverless (Spark) to transform data, Cloud Storage (GCS) to stage files, and BigQuery for the final analytics layer.
+This project turns Transport for London (TfL) bike-rental files into clean, analysis-ready tables in BigQuery. It uses Terraform to manage cloud resources provisioning, Airflow to schedule work, Dataproc Serverless (Spark) to transform data, Cloud Storage (GCS) to stage files, BigQuery for the final analytics layer, and Looker Studio for visualization.
 
 ## Objective
 
@@ -35,16 +35,23 @@ dim_weather (daily weather)
    JSON of daily weather, normalized in the pipeline to an array of day records.
    Source (direct download link): [here](https://docs.google.com/uc?export=download&id=13LWAH93xxEvOukCnPhrfXH7rZZq_-mss)
 
-### Process (two big steps)
+### Process (two significant steps)
+The project was segregated into two broad steps, containing two sets of scripts.
+
 #### 1) Bootstrap (setup + helpers)
 
-init_0_ingestion_to_gcs_dag – Download seed files (stations, weather, one sample journey), normalize weather.json, and upload data + Spark scripts to GCS.
+It sets up the environment so your Airflow containers and connections can talk to GCP using the right credentials and settings.
+Then it downloads the TfL files, cleans the weather JSON, uploads data and scripts to GCS, and runs a Dataproc Serverless job to write processed Parquet files.
 
-init_1_spark_dataproc_dag – Run a small Dataproc Serverless job to write stations and weather to Parquet in processed/….
+The scripts are below:
 
-init_2_gcs_to_bigquery_dag – Load processed weather into BigQuery as dim_weather.
-
-init_3_web_scraping_gcp_vm_dag – Crawl the TfL site and save a manifest (links_dictionary.json) of weekly journey CSV links to GCS.
+1)      init_0_ingestion_to_gcs_dag – Download seed files (stations, weather, one sample journey), normalize weather.json, and upload data + Spark scripts to GCS.
+      
+2)      init_1_spark_dataproc_dag – Run a small Dataproc Serverless job to write stations and weather to Parquet in processed/….
+      
+3)      init_2_gcs_to_bigquery_dag – Load processed weather into BigQuery as dim_weather.
+      
+4)      init_3_web_scraping_gcp_vm_dag – Crawl the TfL site and save a manifest (links_dictionary.json) of weekly journey CSV links to GCS.
 
 #### 2) Production (real data flow)
 
