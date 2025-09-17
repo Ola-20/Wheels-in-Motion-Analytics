@@ -58,6 +58,12 @@ The scripts are below:
 
 #### 2) Production (real data flow)
 
+Section 2 (Transform)
+It waits until Step 1 finishes, then creates a Dataproc Serverless batch with PySpark script and settings.
+It reads raw files from GCS, transforms them, and writes clean Parquet data to the processed folder, using the staging bucket for temp file.
+
+The scripts are below:
+
 proc_0_ingestion_to_gcs_dag – Use the manifest to download the real weekly journey CSVs to GCS raw/.
 
 proc_1_spark_dataproc_serverless_dag – Run the journey transform script to:
