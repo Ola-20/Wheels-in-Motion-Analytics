@@ -10,17 +10,17 @@ This project turns Transport for London (TfL) bike-rental files into clean, anal
 
 To analyze and understand how weather conditions, station characteristics, and time factors influence bicycle rental demand in London. The goal is to identify key patterns and relationships that can help predict rental usage and optimize resource allocation.
 
-To achieve this: Build a reliable, repeatable pipeline from web → raw files → cleaned datasets → BigQuery.
+To achieve this, I built a reliable, repeatable pipeline from web → raw files → cleaned datasets → BigQuery.
 
-Produce a simple star-schema for analysis and dashboards:
-
-fact_journey (rides)
-
-dim_station (stations)
-
-dim_datetime (time attributes)
-
-dim_weather (daily weather)
+   Produce a simple star-schema for analysis and dashboards:
+   
+   fact_journey (rides)
+   
+   dim_station (stations)
+   
+   dim_datetime (time attributes)
+   
+   dim_weather (daily weather)
 
 ## Datasets Used
 1) Weekly journey files (actual rides)
