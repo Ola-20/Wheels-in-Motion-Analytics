@@ -45,13 +45,13 @@ Then it downloads the TfL files, cleans the weather JSON, uploads data and scrip
 
 The scripts are below:
 
-1)      init_0_ingestion_to_gcs_dag – Download seed files (stations, weather, one sample journey), normalize weather.json, and upload data + Spark scripts to GCS.
+1) init_0_ingestion_to_gcs_dag – Download seed files (stations, weather, one sample journey), normalize weather.json, and upload data + Spark scripts to GCS.
       
-2)      init_1_spark_dataproc_dag – Run a small Dataproc Serverless job to write stations and weather to Parquet in processed/….
+2) init_1_spark_dataproc_dag – Run a small Dataproc Serverless job to write stations and weather to Parquet in processed/….
       
-3)      init_2_gcs_to_bigquery_dag – Load processed weather into BigQuery as dim_weather.
+3) init_2_gcs_to_bigquery_dag – Load processed weather into BigQuery as dim_weather.
       
-4)      init_3_web_scraping_gcp_vm_dag – Crawl the TfL site and save a manifest (links_dictionary.json) of weekly journey CSV links to GCS.
+4) init_3_web_scraping_gcp_vm_dag – Crawl the TfL site and save a manifest (links_dictionary.json) of weekly journey CSV links to GCS.
 
 #### 2) Production (real data flow)
 
