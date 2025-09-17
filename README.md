@@ -1,5 +1,5 @@
 # Wheels in Motion Analytics
-*Project is still under development*
+*Note: This project is still under development*
 
 ## Overview
 
