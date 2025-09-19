@@ -28,7 +28,7 @@ download_links = [
     },
     {
         "name": "weather",
-        # note: Google Drive direct download with cert flag to silence wget warnings
+        # I used Google Drive direct download with cert flag to silence wget warnings
         "link": '--no-check-certificate "https://docs.google.com/uc?export=download&id=13LWAH93xxEvOukCnPhrfXH7rZZq_-mss"',
         "output": "weather.json",
     },
