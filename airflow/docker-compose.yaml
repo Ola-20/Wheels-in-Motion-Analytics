@@ -3,7 +3,7 @@
 x-airflow-common: &airflow-common
   image: airflow-img:latest
   env_file:
-    - .env                        # <-- your .env holds GCP vars for all 4 DAGs
+    - .env                        # <-- My .env holds GCP vars for all 4 DAGs
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -11,17 +11,17 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
-    # Make logs a bit chattier for debugging jobs
+    # This make logs a bit chattier for debugging jobs
     AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
-    # Set timezone to match your location (helps with “today/now”)
+    # I Set timezone to match my location (helps with “today/now”)
     AIRFLOW__CORE__DEFAULT_TIMEZONE: Australia/Sydney
-    # IMPORTANT: do NOT set GOOGLE_APPLICATION_CREDENTIALS since you want VM metadata auth
+    # IMPORTANT: I do NOT set GOOGLE_APPLICATION_CREDENTIALS since you want VM metadata auth
     # GOOGLE_APPLICATION_CREDENTIALS: (unset)
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
-    # If you ever switch to JSON creds, mount them explicitly and set GOOGLE_APPLICATIONS_CREDENTIALS
+    # If I ever switch to JSON creds, I'll mount them explicitly and set GOOGLE_APPLICATIONS_CREDENTIALS
     # - ${HOST_ADC_PATH}:/opt/airflow/gcloud/adc.json:ro
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
