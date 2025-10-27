@@ -17,6 +17,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DEFAULT_TIMEZONE: Australia/Sydney
     # IMPORTANT: I do NOT set GOOGLE_APPLICATION_CREDENTIALS since you want VM metadata auth
     # GOOGLE_APPLICATION_CREDENTIALS: (unset)
+    AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
