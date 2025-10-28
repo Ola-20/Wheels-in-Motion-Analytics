@@ -1,27 +1,44 @@
 #!/usr/bin/env python3
-# Transform rental journey data
+# Transform rental journey data (aligned with proc_1_spark_dataproc_serverless_dag)
 
 import os
+import argparse
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F, types as T
 
 # ----------------------------
-# Config (change via env if needed)
+# Helpers
 # ----------------------------
-GCS_BUCKET        = os.environ.get("GCS_BUCKET", "your-bucket-name")
-RAW_JOURNEY_PREFIX = os.environ.get("RAW_JOURNEY_PREFIX", "raw/cycling-journey")
-PROCESSED_DIM      = os.environ.get("PROCESSED_DIM", "processed/cycling-dimension")
-PROCESSED_FACT     = os.environ.get("PROCESSED_FACT", "processed/cycling-fact")
+def gs_uri(bucket: str, prefix: str) -> str:
+    return f"gs://{bucket}/{prefix.lstrip('/')}"
 
-JOURNEY_IN   = f"gs://{GCS_BUCKET}/{RAW_JOURNEY_PREFIX}/*/*"          # e.g. year/month folders
-STATIONS_DIM = f"gs://{GCS_BUCKET}/{PROCESSED_DIM}/stations/"         # existing dim
-DATETIME_OUT = f"gs://{GCS_BUCKET}/{PROCESSED_DIM}/datetime/"         # new dim
-JOURNEY_OUT  = f"gs://{GCS_BUCKET}/{PROCESSED_FACT}/journey/"         # fact
+def is_glob(p: str) -> bool:
+    return any(ch in p for ch in "*?[]")
+
+# ----------------------------
+# Args & env fallbacks (match proc_1)
+# ----------------------------
+env = os.environ
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--gcs-bucket",     default=env.get("GCS_BUCKET", "bicycle-renting-proc-analytics-bucket-12345"))
+parser.add_argument("--input-prefix",   default=env.get("JOURNEY_INPUT_PREFIX", "raw/cycling-journey/*/*.csv"))
+parser.add_argument("--processed-dim",  default=env.get("PROCESSED_DIM", "processed/cycling-dimension"))
+parser.add_argument("--processed-fact", default=env.get("PROCESSED_FACT", "processed/cycling-fact"))
+args = parser.parse_args()
+
+GCS_BUCKET      = args.gcs_bucket
+INPUT_PREFIX    = args.input_prefix          # e.g. "raw/cycling-journey/*/*.csv" OR "raw/cycling-journey"
+PROCESSED_DIM   = args.processed_dim         # e.g. "processed/cycling-dimension"
+PROCESSED_FACT  = args.processed_fact        # e.g. "processed/cycling-fact"
+
+JOURNEY_IN   = gs_uri(GCS_BUCKET, INPUT_PREFIX)
+STATIONS_DIM = gs_uri(GCS_BUCKET, f"{PROCESSED_DIM.rstrip('/')}/stations/")
+DATETIME_OUT = gs_uri(GCS_BUCKET, f"{PROCESSED_DIM.rstrip('/')}/datetime/")
+JOURNEY_OUT  = gs_uri(GCS_BUCKET, f"{PROCESSED_FACT.rstrip('/')}/journey/")
 
 # ----------------------------
 # Spark session
-# - On Dataproc, GCS connector is built-in.
-# - On a GCP VM, ensure the GCS connector is available.
 # ----------------------------
 spark = (
     SparkSession.builder
@@ -32,91 +49,105 @@ spark = (
 # ============================
 # 1) Load journey CSVs
 # ============================
-df_journey = (
-    spark.read
-    .option("header", "true")
-    .option("inferSchema", "true")
-    .csv(JOURNEY_IN)
-)
+reader = spark.read.option("header", "true").option("inferSchema", "true")
+if is_glob(INPUT_PREFIX):
+    df_journey = reader.csv(JOURNEY_IN)
+else:
+    # If a directory/root is passed, read recursively
+    df_journey = reader.option("recursiveFileLookup", "true").csv(JOURNEY_IN)
 
 # ============================
-# 2) Rename columns (lowercase, remove spaces in key fields)
-#    Keep the station-name columns for now (used later), drop them after the merge step.
+# 2) (Optional) normalize a few known variants for timestamps only
+#    We keep station columns AS-IS and will reference them with backticks in SQL.
 # ============================
-df_journey = (
-    df_journey
-    .withColumnRenamed("Rental Id",       "rental_id")
-    .withColumnRenamed("Bike Id",         "bike_id")
-    .withColumnRenamed("Start Date",      "start_date")
-    .withColumnRenamed("End Date",        "end_date")
-    .withColumnRenamed("StartStation Id", "start_station")
-    .withColumnRenamed("EndStation Id",   "end_station")
-)
+rename_map = {
+    "Start Date": "start_date",
+    "Start date": "start_date",
+    "End Date":   "end_date",
+    "End date":   "end_date",
+}
+for src, dst in rename_map.items():
+    if src in df_journey.columns:
+        df_journey = df_journey.withColumnRenamed(src, dst)
 
 # ============================
-# 3) Convert types (strings -> timestamps) and add weather_date (date)
-#    NOTE: original format should be 'dd/MM/yyyy HH:mm' (four y's)
+# 3) Parse timestamps + weather_date
 # ============================
 time_fmt = "dd/MM/yyyy HH:mm"
-df_journey = df_journey.withColumn("start_date", F.to_timestamp(F.col("start_date"), time_fmt))
-df_journey = df_journey.withColumn("end_date",   F.to_timestamp(F.col("end_date"),   time_fmt))
-df_journey = df_journey.withColumn("weather_date", F.to_date(F.col("start_date")))  # date part of start
+if "start_date" in df_journey.columns:
+    df_journey = df_journey.withColumn("start_date", F.to_timestamp(F.col("start_date"), time_fmt))
+if "end_date" in df_journey.columns:
+    df_journey = df_journey.withColumn("end_date",   F.to_timestamp(F.col("end_date"),   time_fmt))
+if "start_date" in df_journey.columns:
+    df_journey = df_journey.withColumn("weather_date", F.to_date(F.col("start_date")))
 
 # ============================
-# 4) Update stations dimension with any new station IDs seen in journeys
-#    - Read existing stations dim (from the first helper script output)
-#    - Find station IDs in journeys that are not in the dim
-#    - Build minimal rows for those (id + name + placeholder coords)
-#    - Append them to the stations dim
+# 4) Build/refresh stations dim with INT ids (overwrite)
+#    Use exact CSV headers with backticks; cast IDs to BIGINT so Parquet → BQ INT64 is clean.
 # ============================
-# Load existing stations dimension (Parquet)
-df_station_dim = spark.read.parquet(STATIONS_DIM)
+station_schema = T.StructType([
+    T.StructField("station_id",   T.LongType(),  True),  # INT64 in BQ
+    T.StructField("station_name", T.StringType(), True),
+    T.StructField("longitude",    T.DoubleType(), True),
+    T.StructField("latitude",     T.DoubleType(), True),
+    T.StructField("easting",      T.DoubleType(), True),
+    T.StructField("northing",     T.DoubleType(), True),
+])
 
-# Temp views for simple SQL logic (optional—could be done with joins too)
+# Read any existing stations and coerce to LONG for a clean union
+try:
+    df_station_dim = spark.read.parquet(STATIONS_DIM)
+    if "station_id" in df_station_dim.columns:
+        df_station_dim = df_station_dim.withColumn("station_id", F.col("station_id").cast(T.LongType()))
+    else:
+        df_station_dim = spark.createDataFrame(spark.sparkContext.emptyRDD(), station_schema)
+except Exception:
+    df_station_dim = spark.createDataFrame(spark.sparkContext.emptyRDD(), station_schema)
+
 df_journey.createOrReplaceTempView("journey")
 df_station_dim.createOrReplaceTempView("station")
 
 additional_stations = spark.sql("""
-with station_ids as (
-  select station_id from station
+WITH station_ids AS (
+  SELECT station_id FROM station
 )
-select distinct
-  cast(j.start_station as string) as station_id,
-  j.`StartStation Name`           as station_name
-from journey j
-where j.start_station is not null
-  and cast(j.start_station as string) not in (select station_id from station_ids)
-
-union
-
-select distinct
-  cast(j.end_station as string)   as station_id,
-  j.`EndStation Name`             as station_name
-from journey j
-where j.end_station is not null
-  and cast(j.end_station as string) not in (select station_id from station_ids)
+SELECT DISTINCT
+  CAST(j.`Start station number` AS BIGINT) AS station_id,
+  j.`Start station`                        AS station_name
+FROM journey j
+WHERE j.`Start station number` IS NOT NULL
+  AND CAST(j.`Start station number` AS BIGINT) NOT IN (SELECT station_id FROM station_ids)
+UNION
+SELECT DISTINCT
+  CAST(j.`End station number`   AS BIGINT) AS station_id,
+  j.`End station`                          AS station_name
+FROM journey j
+WHERE j.`End station number` IS NOT NULL
+  AND CAST(j.`End station number` AS BIGINT) NOT IN (SELECT station_id FROM station_ids)
 """)
 
-# Add placeholder numeric columns expected by the dim schema (adjust as needed)
-# Using zeros here—replace later if you have real geo data.
 additional_stations = (
     additional_stations
     .withColumn("longitude", F.lit(0.0).cast(T.DoubleType()))
     .withColumn("latitude",  F.lit(0.0).cast(T.DoubleType()))
     .withColumn("easting",   F.lit(0.0).cast(T.DoubleType()))
     .withColumn("northing",  F.lit(0.0).cast(T.DoubleType()))
-    .dropDuplicates(["station_id"]) # in case a station is in both start and end after union
 )
 
-# Append any new stations to the dim
-# (If there are none, this will just write an empty job; that's fine.)
-if additional_stations.limit(1).count() > 0:
-    (additional_stations.write.mode("append").parquet(STATIONS_DIM))
+# Union with existing (both are LONG now), then overwrite folder to fix schema
+df_station_all = (
+    df_station_dim.select("station_id", "station_name", "longitude", "latitude", "easting", "northing")
+    .unionByName(additional_stations.select("station_id", "station_name", "longitude", "latitude", "easting", "northing"), allowMissingColumns=True)
+    .dropDuplicates(["station_id"])
+)
+
+# Overwrite to ensure a single consistent schema on disk
+df_station_all.write.mode("overwrite").parquet(STATIONS_DIM)
 
 # ============================
-# 5) Drop journey columns no longer needed
+# 5) Drop journey columns no longer needed (use exact names)
 # ============================
-cols_to_drop = ["StartStation Name", "EndStation Name", "Duration"]
+cols_to_drop = ["Start station", "End station", "Total duration", "Total duration (ms)"]
 df_journey = df_journey.drop(*[c for c in cols_to_drop if c in df_journey.columns])
 
 # ============================
@@ -137,15 +168,30 @@ def build_datetime_df(df, ts_col):
         .where(F.col(ts_col).isNotNull())
     )
 
-dt_from_start = build_datetime_df(df_journey, "start_date")
-dt_from_end   = build_datetime_df(df_journey, "end_date")
+dfs = []
+if "start_date" in df_journey.columns:
+    dfs.append(build_datetime_df(df_journey, "start_date"))
+if "end_date" in df_journey.columns:
+    dfs.append(build_datetime_df(df_journey, "end_date"))
 
-df_datetime = dt_from_start.unionByName(dt_from_end).dropDuplicates(["datetime_id"])
+if dfs:
+    df_datetime = dfs[0]
+    for d in dfs[1:]:
+        df_datetime = df_datetime.unionByName(d).dropDuplicates(["datetime_id"])
+else:
+    df_datetime = spark.createDataFrame([], T.StructType([
+        T.StructField("datetime_id", T.TimestampType(), True),
+        T.StructField("year",        T.IntegerType(),   True),
+        T.StructField("week_day",    T.IntegerType(),   True),
+        T.StructField("month",       T.IntegerType(),   True),
+        T.StructField("day",         T.IntegerType(),   True),
+        T.StructField("hour",        T.IntegerType(),   True),
+        T.StructField("minute",      T.IntegerType(),   True),
+        T.StructField("second",      T.IntegerType(),   True),
+    ]))
 
 # ============================
 # 7) Write outputs (Parquet)
-#    - datetime dim (append)
-#    - journey fact (append)
 # ============================
 (
     df_datetime
