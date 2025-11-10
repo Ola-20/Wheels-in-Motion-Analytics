@@ -176,7 +176,7 @@ Make sure these match what Terraform created. so check the terraform to confirm 
 
       docker-compose up -d
 
-#### 4.4 Access the Airflow UI
+##### 4.4 Access the Airflow UI
 
    Open your browser and go to:
       
@@ -209,3 +209,65 @@ Make sure these match what Terraform created. so check the terraform to confirm 
       GCS: raw + processed folders populated
 
       BigQuery: dim & fact tables created and filled
+
+NOTE: After confirming all the tables, I created a materialised table that combines all the needed columns from the 4 tables called "journeys_enriched" so that i can have a faster response on my visualisation, this is optional.
+
+### 5) Build and View the Dashboard in Looker Studio
+
+Once data is loaded into BigQuery, you can connect Looker Studio to start visualising your cycling-journey data.
+
+##### 5.1 Open Looker Studio
+
+Go to https://lookerstudio.google.com
+
+Sign in with the same Google account used for your GCP project.
+
+##### 5.2 Create a New Report
+
+   Click “Blank report.”
+
+   Select BigQuery as your data source.
+   
+   Choose your project → dataset (cycling_analytics) → select the table journeys_enriched (or any dim/fact table you prefer).
+
+   Click Add → Add to report.
+
+##### 5.3 Create and Customise Your Dashboard
+
+   Add charts such as edit as needed:
+
+   Set a background color or image for visual appeal.
+
+##### 5.4 Share or Publish
+
+   Use Share → Manage access to grant view access.
+
+   Or click File → Embed report to add it to your GitHub README or portfolio site.
+
+
+### Project Structure Summarised
+
+This repository is organised into folders that separate infrastructure, data pipelines, and scripts, making it easy to follow and maintain.
+
+Wheels-in-Motion-Analytics/
+│
+├── terraform/                # Infrastructure as Code (IaC)
+│   ├── main.tf               # Defines GCP resources (buckets, BigQuery, Dataproc, etc.)
+│   ├── variables.tf          # Input variables for resource names and locations
+│   ├── outputs.tf            # Outputs (e.g., bucket names, dataset IDs)
+│   └── provider.tf           # Google provider configuration
+│
+├── airflow/                  # Workflow orchestration environment
+│   ├── dags/                 # Contains DAG definitions and transformation logic
+│   │   ├── init_*.py         # Initial ingestion DAGs
+│   │   ├── proc_*.py         # Processing and load-to-BigQuery DAGs
+│   │   └── scripts/          # Python scripts used inside the DAGs
+│   │       ├── journey-data-transformation.py
+│   │       └── weather-data-transformation.py
+│   ├── docker-compose.yaml   # Spins up Airflow webserver, scheduler, and DB
+│   ├── Dockerfile            # (Optional) Custom Airflow image
+│   ├── requirements.txt      # Python dependencies for Airflow environment
+│   └── .env                  # Environment variables (project, bucket, dataset)
+│
+├── README.md                 # Documentation and setup guide
+└── .gitignore                # Git ignore rules (logs, creds, compiled files)
