@@ -138,3 +138,15 @@ Once Terraform has created the GCP resources, use the airflow folder in this rep
 ##### 4.1 Go to the Airflow folder
 
     cd airflow
+
+   This folder contains:
+
+      docker-compose.yaml – runs Airflow (webserver, scheduler, Postgres)
+
+      Dockerfile / image config
+
+      dags/ – all DAGs
+
+      dags/scripts/ – PySpark / helper scripts
+
+      requirements.txt – Python deps for Airflow
