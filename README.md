@@ -150,3 +150,15 @@ Once Terraform has created the GCP resources, use the airflow folder in this rep
       dags/scripts/ – PySpark / helper scripts
 
       requirements.txt – Python deps for Airflow
+
+##### 4.2 Configure environment variables
+
+   Create a .env file inside the airflow folder and set the key values:
+
+GCP_PROJECT_ID=your-project-id
+GCS_BUCKET=your-data-bucket-name
+BQ_DATASET=your-dataset-name
+BQ_LOCATION=australia-southeast1
+
+
+Make sure these match what Terraform created. so check the terraform to confirm the names you might have edited based on your GCP project name.
