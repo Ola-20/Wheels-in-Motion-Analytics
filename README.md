@@ -256,39 +256,39 @@ Wheels-in-Motion-Analytics/
 
 ├── terraform/                # Infrastructure as Code (IaC)
 
-│   ├── main.tf               # Defines GCP resources (buckets, BigQuery, Dataproc, etc.)
+    ├── main.tf               # Defines GCP resources (buckets, BigQuery, Dataproc, etc.)
 
-│   ├── variables.tf          # Input variables for resource names and locations
+    ├── variables.tf          # Input variables for resource names and locations
 
-│   ├── outputs.tf            # Outputs (e.g., bucket names, dataset IDs)
+    ├── outputs.tf            # Outputs (e.g., bucket names, dataset IDs)
 
-│   └── provider.tf           # Google provider configuration
-│
+    └── provider.tf           # Google provider configuration
+
 
 
 ├── airflow/                  # Workflow orchestration environment
 
-│   ├── dags/                 # Contains DAG definitions and transformation logic
+    ├── dags/                 # Contains DAG definitions and transformation logic
 
-│   │   ├── init_*.py         # Initial ingestion DAGs
+    │   ├── init_*.py         # Initial ingestion DAGs
 
-│   │   ├── proc_*.py         # Processing and load-to-BigQuery DAGs
+    │   ├── proc_*.py         # Processing and load-to-BigQuery DAGs
 
-│   │   └── scripts/          # Python scripts used inside the DAGs
+    │   └── scripts/          # Python scripts used inside the DAGs
 
-│   │       ├── journey-data-transformation.py
+    │       ├── journey-data-transformation.py
 
-│   │       └── weather-data-transformation.py
+    │       └── weather-data-transformation.py
 
-│   ├── docker-compose.yaml   # Spins up Airflow webserver, scheduler, and DB
+    ├── docker-compose.yaml   # Spins up Airflow webserver, scheduler, and DB
 
-│   ├── Dockerfile            # (Optional) Custom Airflow image
+    ├── Dockerfile            # (Optional) Custom Airflow image
 
-│   ├── requirements.txt      # Python dependencies for Airflow environment
+    ├── requirements.txt      # Python dependencies for Airflow environment
 
-│   └── .env                  # Environment variables (project, bucket, dataset)
+    └── .env                  # Environment variables (project, bucket, dataset)
 
-│
+
 
 ├── README.md                 # Documentation and setup guide
 
