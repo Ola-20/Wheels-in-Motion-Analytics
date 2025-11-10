@@ -130,3 +130,11 @@ You should see:
    Dataproc service enabled
 
    IAM roles and service accounts created
+
+### 4) Start Airflow and Run the Pipeline
+
+Once Terraform has created the GCP resources, use the airflow folder in this repo to run the pipelines with Docker.
+
+##### 4.1 Go to the Airflow folder
+
+    cd airflow
