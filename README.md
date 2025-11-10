@@ -198,14 +198,14 @@ Make sure these match what Terraform created. so check the terraform to confirm 
 
    Manually trigger in order for a first run:
 
-init_0_ingest_to_gcs (or your equivalent)
+      init_0_ingest_to_gcs (or your equivalent)
 
-proc_1_spark_dataproc_serverless_dag
+      proc_1_spark_dataproc_serverless_dag
 
-proc_2_gcs_to_bigquery_dag
+      proc_2_gcs_to_bigquery_dag
 
    Confirm in:
 
-GCS: raw + processed folders populated
+      GCS: raw + processed folders populated
 
-BigQuery: dim & fact tables created and filled
+      BigQuery: dim & fact tables created and filled
