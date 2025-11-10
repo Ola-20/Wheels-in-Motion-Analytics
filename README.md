@@ -41,7 +41,7 @@ The project was segregated into two broad sections, containing two sets of scrip
 
 #### 1) Bootstrap (setup and test, Upload helper scripts)
 
-It sets up the environment so your Airflow containers and connections can talk to GCP using the right credentials and settings.
+It sets up the environment so the Airflow containers and connections can talk to GCP using the right credentials and settings.
 Then it downloads the TfL files, cleans the weather JSON, uploads data and scripts to GCS, and runs a Dataproc Serverless job to write processed Parquet files.
 
 The scripts are below:
@@ -93,3 +93,14 @@ The scripts are below:
    processed/cycling-fact/journey/
    
    utils/scripts/*.py, links_dictionary.json (manifest)
+
+
+## Steps to Run the Project
+### 1) Requirements
+   Create a GCP project and enable APIs such as Cloud Storage JSON, BigQuery, DataProc, Compute Engine APIs
+   Make sure your Google account has owner role for the project
+   Install Docker, Docker Compose, Terraform and Git on your VM or local machine
+
+### 2) Clone this Repo
+   git clone https://github.com/<your-username>/bicycle-renting-proc-analytics.git
+   cd bicycle-renting-proc-analytics
