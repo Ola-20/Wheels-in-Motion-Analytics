@@ -165,3 +165,47 @@ Once Terraform has created the GCP resources, use the airflow folder in this rep
 
 
 Make sure these match what Terraform created. so check the terraform to confirm the names you might have edited based on your GCP project name.
+
+
+##### 4.3 Build and start Airflow
+   Build the Airflow image
+      
+      docker-compose build
+
+   Start Airflow (webserver, scheduler, db)
+
+      docker-compose up -d
+
+#### 4.4 Access the Airflow UI
+
+   Open your browser and go to:
+      
+      http://localhost:8080
+
+   Log in with the credentials defined in docker-compose.yaml (often airflow / airflow for local).
+
+   You should now see all DAGs from airflow/dags/ which are of two sets:
+
+      init_... DAGs (initial ingest/setup)
+
+      proc_... DAGs (processing & load to BigQuery)
+
+##### 4.5 Run the pipeline
+
+   In Airflow:
+
+   Turn ON (unpause) the DAGs you want to use.
+
+   Manually trigger in order for a first run:
+
+init_0_ingest_to_gcs (or your equivalent)
+
+proc_1_spark_dataproc_serverless_dag
+
+proc_2_gcs_to_bigquery_dag
+
+   Confirm in:
+
+GCS: raw + processed folders populated
+
+BigQuery: dim & fact tables created and filled
