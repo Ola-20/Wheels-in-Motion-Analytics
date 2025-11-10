@@ -300,16 +300,16 @@ Wheels-in-Motion-Analytics/
 
 You can fully reproduce this end-to-end pipeline by following these high-level steps:
 
-Fork or clone this repository to your own GitHub account.
+a) Fork or clone this repository to your own GitHub account.
 
-Set up GCP and create your own project (enable APIs, create a service account, and assign owner permissions).
+b) Set up GCP and create your own project (enable APIs, create a service account, and assign owner permissions).
 
-Run Terraform to automatically provision Cloud Storage, BigQuery, and Dataproc.
+c) Run Terraform to automatically provision Cloud Storage, BigQuery, and Dataproc.
 
-Deploy Airflow (Docker Compose) and trigger the DAGs (proc_0 → proc_1 → proc_2).
+d) Deploy Airflow (Docker Compose) and trigger the DAGs (proc_0 → proc_1 → proc_2).
 
-Validate your BigQuery tables, then create the vw_journeys_enriched view and the journeys_enriched materialised table.
+e) Validate your BigQuery tables, then create the vw_journeys_enriched view and the journeys_enriched materialised table.
 
-Connect Looker Studio to the table and explore the data visually.
+f) Connect Looker Studio to the table and explore the data visually.
 
-To extend it → modify the PySpark scripts to include new metrics, or add a new DAG to automate data refresh
+g) To extend it → modify the PySpark scripts to include new metrics, or add a new DAG to automate data refresh
