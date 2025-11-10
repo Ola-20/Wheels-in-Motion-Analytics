@@ -102,5 +102,5 @@ The scripts are below:
    Install Docker, Docker Compose, Terraform and Git on your VM or local machine
 
 ### 2) Clone this Repo
-   git clone https://github.com/<your-username>/bicycle-renting-proc-analytics.git
-   cd bicycle-renting-proc-analytics
+      git clone https://github.com/Ola-20/Wheels-in-Motion-Analytics.git
+
