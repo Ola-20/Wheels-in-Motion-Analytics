@@ -104,3 +104,12 @@ The scripts are below:
 ### 2) Clone this Repo
       git clone https://github.com/Ola-20/Wheels-in-Motion-Analytics.git
 
+### 3) Terraform
+Terraform will be used to setup infrastucture for the project
+   Navigate to Terraform Folder
+    cd terraform
+
+   Then run the following in sequence:
+    terraform init
+    terraform plan
+    terraform apply
