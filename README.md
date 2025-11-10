@@ -118,3 +118,15 @@ Terraform will be used to setup infrastucture for the project
     terraform plan
     
     terraform apply
+
+
+Check your Google Cloud Console 
+You should see:
+
+   A new Cloud Storage bucket
+
+   A BigQuery dataset
+
+   Dataproc service enabled
+
+   IAM roles and service accounts created
