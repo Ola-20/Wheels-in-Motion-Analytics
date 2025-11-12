@@ -58,6 +58,8 @@ The scripts are below:
 
 ![Section One Completed](images/ingestion_initialisation_dag_works.PNG)
 
+*Figure 1: Sample of Airflow runs.*
+
 #### 2) Production (real data flow) 
 
 *Note: Scripts below are under development as of 18th of Sept. 2025*
@@ -242,7 +244,7 @@ Sign in with the same Google account used for your GCP project.
 
 ![Sample of some analytics](https://github.com/Ola-20/Wheels-in-Motion-Analytics/blob/main/images/analytics_dashboard_2.PNG)
 
-*Figure 1: Analytics dashboard showing station usage and peak rental times.*
+*Figure 2: Analytics dashboard showing station usage and peak rental times.*
 
 
 
