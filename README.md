@@ -234,9 +234,11 @@ Sign in with the same Google account used for your GCP project.
 
 ##### 5.3 Create and Customise Your Dashboard
 
-   Add charts such as edit as needed:
+   Add charts and edit as needed:
 
    Set a background color or image for visual appeal.
+
+![Sample of some analytics](https://github.com/Ola-20/Wheels-in-Motion-Analytics/blob/main/images/analytics_dashboard_2.PNG)
 
 ##### 5.4 Share or Publish
 
