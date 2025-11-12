@@ -240,13 +240,6 @@ Sign in with the same Google account used for your GCP project.
 
 ![Sample of some analytics](https://github.com/Ola-20/Wheels-in-Motion-Analytics/blob/main/images/analytics_dashboard_2.PNG)
 
-##### 5.4 Share or Publish
-
-   Use Share → Manage access to grant view access.
-
-   Or click File → Embed report to add it to your GitHub README or portfolio site.
-
-
 
 
 ## Project Structure Summarised
