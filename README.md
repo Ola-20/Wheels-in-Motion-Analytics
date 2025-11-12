@@ -78,9 +78,18 @@ The scripts are below:
          
          create processed/cycling-dimension/datetime/ (datetime dim),
          
-         and augment processed/cycling-dimension/stations/ if new station IDs appear.
+         and augment processed/cycling-dimension/stations/ if new station IDs appear
+   
+4) proc_2_gcs_to_bigquery_dag – Load Parquet from GCS to BigQuery tables: dim_station, dim_datetime, fact_journey (overwrite for a clean, idempotent load).
 
-3) proc_2_gcs_to_bigquery_dag – Load Parquet from GCS to BigQuery tables: dim_station, dim_datetime, fact_journey (overwrite for a clean, idempotent load).
+
+ ![Final dag run success](https://github.com/Ola-20/Wheels-in-Motion-Analytics/blob/main/images/dag_run_success_screen_shot_2.PNG)
+
+ *Figure 2: Final dag run.*
+
+
+
+
 
 ### Expected Outputs
 
@@ -244,7 +253,7 @@ Sign in with the same Google account used for your GCP project.
 
 ![Sample of some analytics](https://github.com/Ola-20/Wheels-in-Motion-Analytics/blob/main/images/analytics_dashboard_2.PNG)
 
-*Figure 2: Analytics dashboard showing station usage and peak rental times.*
+*Figure 3: Analytics dashboard showing station usage and peak rental times.*
 
 
 
